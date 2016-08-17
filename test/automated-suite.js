@@ -35,6 +35,8 @@ describe('Test SW-Toolbox', function() {
   // so bumped up the limit
   // TODO: Verify FF.latest no longer has these timeout issues
   this.timeout(100000);
+  // Selenium Tests are Flakey
+  this.retries(3);
 
   // Driver is initialised to `null` to handle scenarios
   // where the desired browser isn't installed / fails to load
@@ -89,15 +91,31 @@ describe('Test SW-Toolbox', function() {
   automatedBrowsers.forEach(browserInfo => {
     // Tests are running differently from mocha compared to gulp test:manual
     // :( Results in errors that can't be debugged
-    if (browserInfo.getSeleniumBrowserId() === 'firefox' &&
+    if (process.env.TRAVIS && browserInfo.getSeleniumBrowserId() === 'firefox' &&
       browserInfo.getVersionNumber() <= 50) {
       console.log('Skipping ' + browserInfo.getRawVersionString());
       return;
     }
 
+    if (process.env.TRAVIS && browserInfo.getSeleniumBrowserId() === 'opera' &&
+      browserInfo.getVersionNumber() <= 39) {
+      console.log('Skipping ' + browserInfo.getRawVersionString());
+      return;
+    }
+
+    // This properly breaks the tests
+    if (browserInfo.getSeleniumBrowserId() === 'chrome' &&
+      browserInfo.getVersionNumber() === 54) {
+      console.log('Skipping ' + browserInfo.getRawVersionString());
+      return;
+    }
+
     // Block browsers w/o Service Worker support from being included in the tests
-    if (browserInfo.getSeleniumBrowserId() !== 'firefox' &&
-      browserInfo.getSeleniumBrowserId() !== 'chrome') {
+    if (process.env.TRAVIS &&
+      browserInfo.getSeleniumBrowserId() !== 'firefox' &&
+      browserInfo.getSeleniumBrowserId() !== 'chrome' &&
+      browserInfo.getSeleniumBrowserId() !== 'opera') {
+      console.log('Not running tests on: ' + browserInfo.getPrettyName());
       return;
     }
 
